@@ -1,0 +1,14 @@
+# Sub-repos (each has its own git repo)
+/chessground/
+/chessops/
+/lila/
+/lila-db-seed/
+/lila-openingexplorer/
+/lila-ws/
+/scalachess/
+
+# IDE
+/.idea/
+
+# Local settings
+.claude/settings.local.json
