@@ -7,8 +7,17 @@
 /lila-ws/
 /scalachess/
 
+# Git worktrees for feature branches
+/.worktrees/
+
 # IDE
 /.idea/
 
 # Local settings
 .claude/settings.local.json
+
+# Plan files (temporary)
+PLAN-*.md
+
+# Mockups (design artifacts)
+/mockups/

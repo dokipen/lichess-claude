@@ -7,16 +7,102 @@ description: Coordinate implementation work through structured phases with speci
 
 You are now acting as the technical lead, coordinating specialist agents on this task.
 
-## Multi-Repo Context
+## Repository Structure
 
-Lichess is a multi-repo project. Work may span:
-- **lila**: Main Scala server
-- **lila-ws**: WebSocket server
-- **chessground**: Board UI (TypeScript)
-- **chessops**: Chess logic (TypeScript)
-- **scalachess**: Chess logic (Scala)
+This is the `lichess-claude` repository - the Claude Code configuration for Lichess development.
 
-Each repo has its own git history. Coordinate changes across repos carefully.
+```
+lichess/                          # Root of lichess-claude repo (pwd)
+├── .claude/                      # Claude Code configuration
+│   ├── agents/                   # Specialist agent prompts
+│   ├── skills/                   # Skill definitions (like this one)
+│   └── settings.json             # Claude settings
+├── .worktrees/                   # Git worktrees for feature branches (gitignored)
+│   └── {issue}-{description}/    # One worktree per feature branch
+├── scripts/                      # Helper scripts
+├── lila/                         # Sub-repo: Main Scala server
+├── lila-ws/                      # Sub-repo: WebSocket server
+├── chessground/                  # Sub-repo: Board UI (TypeScript)
+├── chessops/                     # Sub-repo: Chess logic (TypeScript)
+└── scalachess/                   # Sub-repo: Scala chess library
+```
+
+**Important**: The root directory (`pwd`) IS the lichess-claude git repo. The `.claude/` directory is a subdirectory, not a separate repo.
+
+---
+
+## Worktree Workflow
+
+### The Golden Rule
+
+**ALWAYS use worktrees for feature work. NEVER commit directly to main.**
+
+Branch names **MUST** start with the GitHub issue number: `{issue-number}-{description}`
+
+### Single-Repo Work (lichess-claude only)
+
+For changes only to `.claude/`, `scripts/`, or `README.md`:
+
+```bash
+# From repo root (lichess/)
+./scripts/create-worktree.sh 42-add-architect-agent
+cd .worktrees/42-add-architect-agent
+
+# Make changes, commit, push
+git add .
+git commit -m "feat: add architect agent"
+git push -u origin 42-add-architect-agent
+```
+
+### Multi-Repo Work (lichess-claude + sub-repos)
+
+**When work spans multiple repos, use the SAME branch name in ALL repos.**
+
+Example: Issue #42 requires changes to lichess-claude AND lila:
+
+```bash
+# Step 1: Create worktree in lichess-claude
+./scripts/create-worktree.sh 42-add-opening-practice
+cd .worktrees/42-add-opening-practice
+
+# Step 2: Create MATCHING worktree in the sub-repo
+cd lila
+git worktree add ../.worktrees/42-add-opening-practice-lila -b 42-add-opening-practice
+
+# Now you have:
+# .worktrees/42-add-opening-practice/           <- lichess-claude changes
+# .worktrees/42-add-opening-practice-lila/      <- lila changes (same branch name!)
+```
+
+**Why same branch name?** When PRs reference `Fixes #42`, GitHub links them. Using consistent naming makes cross-repo work trackable.
+
+### Sub-Repo Worktree Pattern
+
+Each sub-repo (lila, chessground, etc.) should also use `.worktrees/`:
+
+```bash
+cd lila
+mkdir -p .worktrees
+git worktree add .worktrees/42-feature-name -b 42-feature-name origin/master
+cd .worktrees/42-feature-name
+# Work here
+```
+
+### Cleaning Up
+
+After PR merge, clean up ALL worktrees:
+
+```bash
+# lichess-claude
+./scripts/cleanup-worktree.sh 42-add-opening-practice
+
+# Sub-repos (from their root)
+cd lila
+git worktree remove .worktrees/42-add-opening-practice
+git worktree prune
+```
+
+---
 
 ## Issue-First Workflow
 
@@ -24,25 +110,24 @@ Each repo has its own git history. Coordinate changes across repos carefully.
 
 ### Before Any Work Begins
 
-1. **Identify the target repo(s)** for this work
+1. **Identify which repo(s)** need the issue:
+   - lichess-claude changes → `dokipen/lichess-claude`
+   - lila changes → `dokipen/lila`
+   - Multi-repo → Create linked issues or one primary issue
 
 2. **Search for existing issue**:
    ```bash
-   gh issue list --search "[relevant keywords]" --state open --repo dokipen/lila
+   gh issue list --search "[keywords]" --state open --repo dokipen/lichess-claude
    ```
 
 3. **If issue exists**: Verify it has clear acceptance criteria
 
-4. **If no issue exists OR acceptance criteria unclear**:
-   - Ask the user for clear acceptance criteria
-   - Create the issue once criteria are defined
+4. **If no issue exists**: Ask user for acceptance criteria, then create
 
 5. **Claim the issue**:
    ```bash
-   gh issue edit [NUMBER] --add-label "in-progress" --repo dokipen/lila
+   gh issue edit [NUMBER] --add-label "in-progress" --repo dokipen/lichess-claude
    ```
-
-**Do not proceed to Phase 0 until an issue with clear acceptance criteria exists.**
 
 ---
 
@@ -56,6 +141,8 @@ Each repo has its own git history. Coordinate changes across repos carefully.
 | `performance-engineer` | Performance | Database queries, WebSocket, rendering |
 | `security-engineer` | Security | Input validation, auth, dependency audits |
 | `claude-specialist` | AI configuration | Updating agents, skills, prompts |
+| `database-engineer` | MongoDB | Schema design, queries, migrations |
+| `documentation-writer` | Docs | API docs, guides (only when requested) |
 
 ---
 
@@ -63,21 +150,23 @@ Each repo has its own git history. Coordinate changes across repos carefully.
 
 ### Phase 0: Setup
 
-1. **Identify target repo(s)**: Which repos need changes?
-
-2. **For single-repo work**: Create a branch in that repo
+1. **Create worktree(s)** for this issue:
    ```bash
-   cd lila && git checkout -b [issue-number]-[description]
+   # Always start with lichess-claude
+   ./scripts/create-worktree.sh [issue-number]-[description]
+
+   # If sub-repos needed, create matching worktrees
+   cd lila && git worktree add .worktrees/[issue-number]-[description] -b [issue-number]-[description] origin/master
    ```
 
-3. **For multi-repo work**: Create branches in each affected repo
-
-4. **Post setup to issue**:
+2. **Post setup to issue**:
    ```bash
-   gh issue comment [ISSUE-NUMBER] --repo dokipen/lila --body "## Setup Complete
+   gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## Setup Complete
 
-   **Repos:** lila, chessground
-   **Branches:** 42-feature-name
+   **Branch:** [issue-number]-[description]
+   **Worktrees:**
+   - lichess-claude: .worktrees/[branch]
+   - lila: lila/.worktrees/[branch] (if applicable)
 
    Proceeding to planning phase."
    ```
@@ -99,11 +188,11 @@ Each repo has its own git history. Coordinate changes across repos carefully.
 
 2. **Verify the test fails correctly**:
    ```bash
-   # Scala
-   cd lila && sbt "testOnly *RelevantTest*"
+   # Scala (in sub-repo worktree)
+   cd lila/.worktrees/[branch] && sbt "testOnly *RelevantTest*"
 
    # TypeScript
-   cd chessops && pnpm test
+   cd chessops/.worktrees/[branch] && pnpm test
    ```
 
 3. **Present to user**: Show the failing test before proceeding to fix
@@ -116,46 +205,55 @@ Each repo has its own git history. Coordinate changes across repos carefully.
 4. **Verify after each change**:
    ```bash
    # Scala
-   cd lila && sbt compile test
+   cd lila/.worktrees/[branch] && sbt compile test
 
    # TypeScript
-   cd chessground && pnpm build && pnpm test
+   cd chessground/.worktrees/[branch] && pnpm build && pnpm test
    ```
 
 ### Phase 3: Pre-PR Verification
 
-1. **Run full test suite** for each affected repo
-
-2. **For bug fixes**: Verify the reproduction test now passes
-
-3. **Fix failures**: Delegate fixes to appropriate specialist
-
-4. **Update issue**:
+1. **Run pre-flight checks** in each affected worktree:
    ```bash
-   gh issue comment [ISSUE-NUMBER] --repo dokipen/lila --body "## Pre-PR Verification Complete
+   # lichess-claude
+   cd .worktrees/[branch] && ../../scripts/pr-preflight.sh
+
+   # Sub-repos
+   cd lila/.worktrees/[branch] && sbt compile test
+   ```
+
+2. **Fix failures**: Delegate fixes to appropriate specialist
+
+3. **Update issue**:
+   ```bash
+   gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## Pre-PR Verification Complete
 
    All tests pass. Proceeding to PR creation."
    ```
 
 ### Phase 4: PR Creation
 
-Use `/create-pr` or create manually:
+Create PRs in each repo with changes. **Use same branch name, reference same issue.**
+
 ```bash
-gh pr create --repo dokipen/lila \
-  --title "type: Title" \
+# lichess-claude PR
+cd .worktrees/[branch]
+gh pr create --repo dokipen/lichess-claude \
+  --title "feat: description" \
   --body "## Summary
 - Change 1
-- Change 2
 
-Fixes #[ISSUE-NUMBER]
+Fixes #[ISSUE-NUMBER]"
 
-## Test plan
-- [ ] sbt compile passes
-- [ ] sbt test passes
-- [ ] Manual testing completed"
+# Sub-repo PR (if applicable)
+cd lila/.worktrees/[branch]
+gh pr create --repo dokipen/lila \
+  --title "feat: description" \
+  --body "## Summary
+- Change 1
+
+Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
 ```
-
-For multi-repo changes, create PRs in each repo and link them.
 
 ### Phase 5: Code Review
 
@@ -166,14 +264,24 @@ For multi-repo changes, create PRs in each repo and link them.
 
 ### Phase 6: Merge and Cleanup
 
-1. **Verify PR checks pass**
-2. **Merge PR**:
+1. **Merge PRs** (sub-repos first if they're dependencies):
    ```bash
    gh pr merge --squash --delete-branch --repo dokipen/lila
+   gh pr merge --squash --delete-branch --repo dokipen/lichess-claude
    ```
-3. **Pull latest main**:
+
+2. **Clean up ALL worktrees**:
    ```bash
-   cd lila && git checkout main && git pull
+   # lichess-claude
+   ./scripts/cleanup-worktree.sh [branch-name]
+
+   # Sub-repos
+   cd lila && git worktree remove .worktrees/[branch-name] && git worktree prune
+   ```
+
+3. **Update main**:
+   ```bash
+   git checkout main && git pull
    ```
 
 ---
@@ -181,11 +289,16 @@ For multi-repo changes, create PRs in each repo and link them.
 ## Coordination Protocol
 
 ### Task Assignment
-When delegating to any agent, ALWAYS tell them the issue number:
+When delegating to any agent, ALWAYS tell them:
+- The issue number
+- Which worktree to work in
+
 ```
 [Task description]
 
-This is for issue #[NUMBER]. Read the issue first to understand the full context.
+This is for issue #[NUMBER].
+Work in worktree: .worktrees/[branch-name]
+Read the issue first to understand the full context.
 ```
 
 ### Task Completion

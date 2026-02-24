@@ -5,82 +5,103 @@ description: Create a new branch for feature development in a specific repo
 
 # New Work Setup
 
-Creates a branch for feature development in the appropriate lichess repo.
+Creates a worktree and branch for feature development.
 
 ## Usage
 
 ```
-/new-work <repo> <issue-number>-<branch-name>
+/new-work <branch-name>
+/new-work <repo> <branch-name>
 ```
 
 **Branch names MUST be prefixed with the GitHub issue number.**
 
 Examples:
-- `/new-work lila 42-add-tournament-feature`
-- `/new-work chessground 15-fix-drag-animation`
-- `/new-work chessops 8-add-chess960-support`
+- `/new-work 42-add-architect-agent` - lichess-claude only
+- `/new-work lila 42-add-opening-practice` - lila sub-repo
 
-## Available Repos
+## Repository Structure
 
-| Repo | Path | Type |
-|------|------|------|
-| lila | `lila/` | Scala (Play) |
-| lila-ws | `lila-ws/` | Scala (WebSocket) |
-| chessground | `chessground/` | TypeScript |
-| chessops | `chessops/` | TypeScript |
-| scalachess | `scalachess/` | Scala |
-| lila-openingexplorer | `lila-openingexplorer/` | Scala |
-
-## What It Does
-
-1. **Navigates to repo**: `cd <repo>/`
-2. **Fetches latest**: `git fetch origin`
-3. **Creates branch**: `<branch-name>` from `origin/master` or `origin/main`
-4. **Confirms setup**: Reports branch and repo
-
-## Commands
-
-```bash
-REPO="<repo>"
-BRANCH_NAME="<branch-name>"
-
-# Navigate to repo
-cd $REPO
-
-# Fetch latest
-git fetch origin
-
-# Determine default branch
-DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-
-# Create and checkout branch
-git checkout -b ${BRANCH_NAME} origin/${DEFAULT_BRANCH}
-
-# Verify setup
-git branch --show-current
+```
+lichess/                    # Root (lichess-claude repo)
+├── .worktrees/             # Worktrees for lichess-claude branches
+├── lila/                   # Sub-repo
+│   └── .worktrees/         # Worktrees for lila branches
+├── chessground/            # Sub-repo
+│   └── .worktrees/         # Worktrees for chessground branches
+└── ...
 ```
 
-## After Setup
+## Single-Repo Work (lichess-claude)
 
-1. Confirm the branch was created: `git branch --show-current`
-2. Begin work using the `/lead` workflow or direct implementation
-3. When done, use `/create-pr` to create a pull request
+For changes to `.claude/`, `scripts/`, or docs:
+
+```bash
+# From repo root
+./scripts/create-worktree.sh 42-add-architect-agent
+cd .worktrees/42-add-architect-agent
+```
+
+## Sub-Repo Work
+
+For changes to lila, chessground, etc:
+
+```bash
+cd <repo>
+mkdir -p .worktrees
+git worktree add .worktrees/<branch-name> -b <branch-name> origin/master
+cd .worktrees/<branch-name>
+```
 
 ## Multi-Repo Work
 
-If your work spans multiple repos:
-1. Run `/new-work` for each affected repo
-2. Use the same issue number prefix for all branches
-3. Create PRs in each repo and link them together
+**Use the SAME branch name in ALL repos.**
 
-Example:
+```bash
+# Step 1: lichess-claude worktree
+./scripts/create-worktree.sh 42-add-opening-practice
+
+# Step 2: lila worktree (same branch name!)
+cd lila
+mkdir -p .worktrees
+git worktree add .worktrees/42-add-opening-practice -b 42-add-opening-practice origin/master
 ```
-/new-work lila 42-add-feature
-/new-work chessground 42-add-feature
+
+## Available Repos
+
+| Repo | Path | Default Branch | Type |
+|------|------|----------------|------|
+| lichess-claude | `.` | main | Config/Scripts |
+| lila | `lila/` | master | Scala (Play) |
+| lila-ws | `lila-ws/` | master | Scala (WebSocket) |
+| chessground | `chessground/` | master | TypeScript |
+| chessops | `chessops/` | main | TypeScript |
+| scalachess | `scalachess/` | master | Scala |
+
+## After Setup
+
+1. Confirm the worktree: `git worktree list`
+2. Navigate to worktree: `cd .worktrees/<branch-name>`
+3. Begin work using `/lead` workflow or direct implementation
+4. When done, use `/create-pr` to create a pull request
+
+## Cleanup
+
+After PR merge:
+
+```bash
+# lichess-claude
+./scripts/cleanup-worktree.sh <branch-name>
+
+# Sub-repos
+cd <repo>
+git worktree remove .worktrees/<branch-name>
+git worktree prune
 ```
 
 ## Notes
 
-- Never work directly on `main`/`master` - always use branches
-- Branch names should be lowercase and hyphenated
+- **NEVER** work directly on `main`/`master` - always use worktrees
+- Branch names must start with issue number: `42-feature-name`
+- Use same branch name across all repos for multi-repo work
 - Keep branches focused on a single issue
