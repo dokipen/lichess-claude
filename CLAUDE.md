@@ -3,8 +3,7 @@
 ## Task Routing
 
 **For implementation work** (features, bugs, refactors, PRs):
-1. First invoke `/new-work` if not already in a worktree
-2. Then invoke `/lead` to coordinate the phases
+Invoke `/lead` to coordinate the phases (it handles worktree setup automatically).
 
 **For simple tasks** (questions, explanations, code review without changes):
 Respond directly without invoking skills.
@@ -60,32 +59,3 @@ Before creating a PR:
 ```bash
 ./scripts/pr-preflight.sh
 ```
-
-## Recommended Local Settings
-
-To avoid permission prompts during the lead workflow, add these to `.claude/settings.json`:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(ls *)",
-      "Bash(mkdir *)",
-      "Bash(git *)",
-      "Bash(gh *)",
-      "Bash(sbt *)",
-      "Bash(pnpm *)",
-      "Bash(./scripts/create-worktree.sh *)",
-      "Bash(./scripts/check-orphaned-worktrees.sh)",
-      "Bash(./scripts/cleanup-worktree.sh *)",
-      "Bash(./scripts/pr-preflight.sh)",
-      "Skill(new-work)",
-      "Skill(new-work:*)",
-      "Skill(lead)",
-      "Skill(lead:*)"
-    ]
-  }
-}
-```
-
-This covers all commands used by skills and agents in the `/lead` workflow.
