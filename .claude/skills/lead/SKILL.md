@@ -297,11 +297,10 @@ Reviews are posted as issue/PR comments:
 
 ### Phase 2: Implementation
 
-1. **Post task assignments** to issue as you delegate
-2. **Delegate to appropriate specialists** in dependency order
-3. **For bug fixes**: The fix should make the reproduction test pass
-4. **Avoid conflicts**: Ensure each task works on different files
-5. **Verify after each change**:
+**For each task:**
+1. **Post task assignment** to issue (using task assignment format)
+2. **Delegate to appropriate specialist**
+3. **Verify the change**:
    ```bash
    # Scala
    cd lila/.worktrees/[branch] && sbt compile test
@@ -309,8 +308,14 @@ Reviews are posted as issue/PR comments:
    # TypeScript
    cd chessground/.worktrees/[branch] && pnpm build && pnpm test
    ```
-6. **Post completion updates** to issue as tasks finish
-7. **Proceed** to verification when all tasks complete
+4. **Post completion** to issue (using task completion format)
+
+**Guidelines:**
+- Assign tasks in dependency order
+- For bug fixes: the fix should make the reproduction test pass
+- Avoid conflicts: no two specialists modify the same file in the same phase
+
+**Proceed** to pre-PR verification when all tasks complete.
 
 ### Phase 3: Pre-PR Verification
 
@@ -358,6 +363,15 @@ gh pr create --repo dokipen/lila \
 Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
 ```
 
+**Post to issue** that PRs are ready:
+```bash
+gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## PR Created
+
+**PR:** [link to PR]
+
+Proceeding to code review."
+```
+
 **Proceed immediately** to code review.
 
 ### Phase 5: Code Review (MANDATORY)
@@ -366,12 +380,14 @@ Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
 
 1. **ALWAYS delegate to `code-reviewer`** - this is mandatory for every PR
 
-2. **Determine additional reviewers** based on changes:
-   | Change Type | Additional Reviewer |
-   |-------------|---------------------|
-   | Auth, input handling, sensitive data | `security-engineer` |
-   | Database queries, loops, real-time code | `performance-engineer` |
-   | UI components, user flows | `ux-engineer` |
+2. **Include mandatory additional reviewers** when changes match these criteria:
+   | Change Type | Required Reviewer |
+   |-------------|-------------------|
+   | Auth, input handling, sensitive data | `security-engineer` (REQUIRED) |
+   | Database queries, loops, real-time code | `performance-engineer` (REQUIRED) |
+   | UI components, user flows | `ux-engineer` (REQUIRED) |
+
+   These are not optional - when code matches a category, that review is MANDATORY.
 
 3. **Post review requests** as PR comments (task assignment format)
 
