@@ -155,12 +155,12 @@ lichess/
 
 ### Module Structure (lila/modules/[name]/)
 ```
-src/main/scala/
+src/main/
 ├── [Name].scala        # Main service class
 ├── [Name]Repo.scala    # MongoDB repository
 ├── [Name]Api.scala     # Public API facade
 ├── [Name]Socket.scala  # WebSocket handler (if real-time)
-├── model.scala         # Data models
+├── model.scala         # Data models (or individual model files)
 └── Env.scala           # Dependency injection
 ```
 
@@ -188,7 +188,7 @@ src/
 
 ## Key Files for Reference
 
-- Module registration: `lila/modules/mod/src/main/scala/Env.scala`
+- Module registration: `lila/modules/[module]/src/main/Env.scala`
 - Routes: `lila/conf/routes`
 - API controllers: `lila/app/controllers/Api.scala`
 - WebSocket messages: `lila-ws/src/main/scala/ipc/`
