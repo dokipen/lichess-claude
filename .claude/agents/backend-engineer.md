@@ -358,6 +358,194 @@ future.recoverWith { case e => fallbackFuture }
 future.void  // converts Fu[A] to Funit
 ```
 
+## WebSocket Integration (lila-ws)
+
+Most modules don't implement WebSocket handlers directly. Instead, lila communicates with lila-ws via a Redis pub/sub bus using a text-based protocol.
+
+### Architecture Overview
+
+```
+Client ←→ lila-ws (WebSocket) ←→ Redis ←→ lila (HTTP + business logic)
+```
+
+- **lila-ws**: Handles WebSocket connections, Pekko actors, real-time messaging
+- **lila**: Business logic, MongoDB, sends messages via socket protocol
+- **Redis**: Message bus between lila and lila-ws
+
+### Room-Based Communication
+
+Most real-time features use "rooms" (games, studies, tournaments):
+
+```scala
+// In your module's Socket class
+final private class TournamentSocket(
+    socketKit: SocketKit,
+    // ... other deps
+)(using Executor):
+
+  // Send messages to lila-ws
+  private lazy val send = socketKit.send("tour-out")
+
+  // Reload room for all users
+  def reload(tourId: TourId): Unit =
+    send.exec(RP.Out.tellRoom(tourId.into(RoomId), makeMessage("reload")))
+
+  // Send to specific user in room
+  def startGame(tourId: TourId, game: Game, userId: UserId): Unit =
+    send.exec(RP.Out.tellRoomUser(
+      tourId.into(RoomId),
+      userId,
+      makeMessage("redirect", game.fullIdOf(color))
+    ))
+
+  // Subscribe to incoming messages from lila-ws
+  socketKit
+    .subscribe("tour-in", Protocol.In.reader.orElse(RP.In.reader)):
+      handler.orElse(socketKit.baseHandler)
+```
+
+### Protocol Messages
+
+Define incoming/outgoing message protocols:
+
+```scala
+object Protocol:
+
+  object In:
+    // Messages received from lila-ws
+    case class WaitingUsers(roomId: RoomId, userIds: Set[UserId]) extends P.In
+
+    val reader: P.In.Reader =
+      case P.RawMsg("tour/waiting", raw) =>
+        raw.get(2) { case Array(roomId, users) =>
+          WaitingUsers(RoomId(roomId), UserId.from(P.In.commas(users).toSet)).some
+        }
+
+  object Out:
+    // Messages sent to lila-ws
+    def getWaitingUsers(roomId: RoomId, name: String) = s"tour/get/waiting $roomId $name"
+```
+
+### Room Protocol Helpers
+
+Use `RoomSocket.Protocol.Out` for common operations:
+
+```scala
+import lila.room.RoomSocket.{ Protocol as RP }
+
+// Tell everyone in a room
+RP.Out.tellRoom(roomId, makeMessage("reload"))
+
+// Tell room with version (for chat, versioned updates)
+RP.Out.tellRoomVersion(roomId, payload, version, isTroll)
+
+// Tell specific user in room
+RP.Out.tellRoomUser(roomId, userId, payload)
+
+// Tell multiple users in room
+RP.Out.tellRoomUsers(roomId, userIds, payload)
+```
+
+### Internal Bus (lila.common.Bus)
+
+For intra-lila communication (not to lila-ws):
+
+```scala
+import lila.common.Bus
+
+// Publish event
+Bus.publish(GameStart(game, white, black), "gameStart")
+
+// Subscribe with dynamic channel
+Bus.subscribeFunDyn(busChan(BusChan).chan):
+  case event: GameEvent => handleEvent(event)
+```
+
+### Key Files
+
+- `lila/modules/room/src/main/RoomSocket.scala` - Room abstraction
+- `lila/modules/tournament/src/main/TournamentSocket.scala` - Tournament example
+- `lila-ws/src/main/scala/ipc/LilaIn.scala` - lila→lila-ws messages
+- `lila-ws/src/main/scala/ipc/LilaOut.scala` - lila-ws→lila messages
+
+## Testing
+
+Tests live in `modules/{name}/src/test/scala/`:
+
+### Test Structure
+
+```scala
+package lila.openingPractice
+
+import chess.format.Fen
+
+class OpeningPracticeApiTest extends munit.FunSuite:
+
+  test("should track progress correctly"):
+    val progress = UserProgress(
+      userId = UserId("test"),
+      groupId = GroupId("sicilian"),
+      completedLines = Set(LineId("dragon"), LineId("najdorf")),
+      totalLines = 5
+    )
+    assertEquals(progress.completionPercent, 40)
+
+  test("should mark line as learned after threshold"):
+    val line = LineProgress(status = LineStatus.Learning(promptCount = 3))
+    val updated = line.afterCorrectAnswer
+    assertEquals(updated.status, LineStatus.Learned)
+
+  // Table-driven tests
+  val testCases = List(
+    ("r1bqkbnr/pppppppp/2n5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2" -> true),
+    ("invalid-fen" -> false)
+  )
+
+  testCases.foreach: (fen, expected) =>
+    test(s"validate FEN: $fen"):
+      assertEquals(Fen.Full.validated(fen).isDefined, expected)
+```
+
+### Running Tests
+
+```bash
+# All tests for a module
+cd lila && sbt "testOnly lila.openingPractice.*"
+
+# Specific test class
+cd lila && sbt "testOnly lila.openingPractice.OpeningPracticeApiTest"
+
+# With watch mode
+cd lila && sbt "~testOnly lila.openingPractice.*"
+```
+
+### Testing Patterns
+
+```scala
+// Use assertEquals for comparisons
+assertEquals(actual, expected)
+
+// Use assert for boolean conditions
+assert(result.isRight)
+
+// Test exceptions
+intercept[IllegalArgumentException]:
+  parseInvalidInput()
+
+// Async tests (if needed)
+test("async operation".ignore): // mark as ignored if async not supported
+  // Use FunFixtures for async in munit
+```
+
+### Test File Location
+
+```
+modules/openingPractice/
+├── src/main/scala/        # Production code
+└── src/test/scala/        # Test code
+    └── OpeningPracticeApiTest.scala
+```
+
 ## Build Configuration
 
 ### Adding a New Module
@@ -426,3 +614,13 @@ When implementing features, provide:
 ### JSON
 - `lila/modules/user/src/main/JsonView.scala` - JSON serialization
 - `lila/modules/study/src/main/JsonView.scala` - Complex JSON
+
+### WebSocket
+- `lila/modules/room/src/main/RoomSocket.scala` - Room socket abstraction
+- `lila/modules/tournament/src/main/TournamentSocket.scala` - Real-time tournament
+- `lila-ws/src/main/scala/ipc/LilaIn.scala` - lila→lila-ws protocol
+- `lila-ws/src/main/scala/ipc/LilaOut.scala` - lila-ws→lila protocol
+
+### Tests
+- `lila/modules/puzzle/src/test/JsonViewTest.scala` - JSON test example
+- `lila/modules/study/src/test/BsonHandlersTest.scala` - BSON test example
