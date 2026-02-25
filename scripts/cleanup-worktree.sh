@@ -7,6 +7,7 @@
 # 1. Deletes the remote branch (if it still exists)
 # 2. Removes the local worktree directory
 # 3. Prunes orphaned worktree references
+# 4. Deletes the local branch
 
 set -e
 
@@ -41,6 +42,10 @@ fi
 echo "Pruning orphaned worktree references..."
 git worktree prune
 echo "  Pruned"
+
+# Step 4: Delete local branch
+echo "Deleting local branch..."
+git branch -d "${BRANCH_NAME}" 2>/dev/null && echo "  Local branch deleted" || echo "  Local branch already deleted or doesn't exist"
 
 echo ""
 echo "Done! Worktree ${BRANCH_NAME} cleaned up."

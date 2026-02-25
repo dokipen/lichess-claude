@@ -61,24 +61,32 @@ git push -u origin 42-add-architect-agent
 Example: Issue #42 requires changes to lichess-claude AND lila:
 
 ```bash
-# Step 1: Create worktree in lichess-claude
+# Step 1: Create worktree in lichess-claude (uses origin/main)
 ./scripts/create-worktree.sh 42-add-opening-practice
-cd .worktrees/42-add-opening-practice
 
-# Step 2: Create MATCHING worktree in the sub-repo
+# Step 2: Create MATCHING worktree in the sub-repo (uses origin/master)
 cd lila
-git worktree add ../.worktrees/42-add-opening-practice-lila -b 42-add-opening-practice
+mkdir -p .worktrees
+git worktree add .worktrees/42-add-opening-practice -b 42-add-opening-practice origin/master
 
 # Now you have:
 # .worktrees/42-add-opening-practice/           <- lichess-claude changes
-# .worktrees/42-add-opening-practice-lila/      <- lila changes (same branch name!)
+# lila/.worktrees/42-add-opening-practice/      <- lila changes (same branch name!)
 ```
 
 **Why same branch name?** When PRs reference `Fixes #42`, GitHub links them. Using consistent naming makes cross-repo work trackable.
 
+### Sub-Repo Default Branches
+
+| Repo | Default Branch |
+|------|----------------|
+| lichess-claude | `main` |
+| lila, lila-ws, chessground, scalachess | `master` |
+| chessops | `main` |
+
 ### Sub-Repo Worktree Pattern
 
-Each sub-repo (lila, chessground, etc.) should also use `.worktrees/`:
+Each sub-repo (lila, chessground, etc.) uses `.worktrees/` inside its own directory:
 
 ```bash
 cd lila

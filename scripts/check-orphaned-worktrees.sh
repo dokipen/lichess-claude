@@ -25,7 +25,9 @@ done
 
 if [ $found_orphans -eq 0 ]; then
   echo "Pre-flight check complete: no orphaned worktrees"
+  exit 0
 else
   echo ""
   echo "Clean up orphaned directories before proceeding"
+  exit 1
 fi

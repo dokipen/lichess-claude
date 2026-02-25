@@ -8,8 +8,12 @@
 
 set -e
 
-WORKTREES_DIR=".worktrees"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WORKTREES_DIR=".worktrees"
+
+# Change to repo root to ensure worktrees are created in the right place
+cd "$REPO_ROOT"
 
 # Check for required argument
 if [ -z "$1" ]; then
