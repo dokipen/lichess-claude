@@ -14,6 +14,7 @@ Lichess uses Snabbdom's `h()` function for rendering, NOT JSX or React component
 
 ```typescript
 import { type VNode, h } from 'snabbdom';
+import { hl, onInsert } from 'lib/view';
 
 // Basic element
 h('div.my-class', 'content')
@@ -24,22 +25,26 @@ h('button.submit', {
   on: { click: handleClick }
 }, 'Submit')
 
-// With hooks for lifecycle
+// hl() is a Lichess helper that extends h() with:
+// - Boolean filtering: hl('div', condition && 'content')
+// - Array flattening: hl('div', [items.map(...)])
+hl('div.container', [
+  showHeader && renderHeader(),  // falsy values filtered out
+  items.map(renderItem),         // arrays auto-flattened
+])
+
+// Lifecycle hooks
 h('div', {
-  hook: {
-    insert: (vnode) => { /* DOM element created */ },
-    postpatch: (old, vnode) => { /* after update */ },
-    destroy: (vnode) => { /* cleanup */ }
-  }
+  hook: onInsert(el => setup(el))  // onInsert helper (preferred)
 })
 ```
 
 ### Chessground Integration
-The board UI library. Configure via `CgConfig` objects.
+The board UI library. Types `CgApi` and `CgConfig` are globally available.
 
 ```typescript
-import { Chessground } from 'chessground';
-import type { Api as CgApi, Config as CgConfig } from 'chessground';
+import { Chessground } from '@lichess-org/chessground';
+// Types CgApi, CgConfig, Color, Key are globally available (no import needed)
 
 const config: CgConfig = {
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -54,7 +59,10 @@ const config: CgConfig = {
   }
 };
 
-const ground = Chessground(element, config);
+// Typically initialized in a hook:
+h('div.board', {
+  hook: onInsert(el => ctrl.setGround(Chessground(el, config)))
+})
 ```
 
 ### chessops for Chess Logic
@@ -172,6 +180,24 @@ pubsub.on('ply', (ply: number) => { /* handle */ });
 pubsub.emit('ply', newPly);
 ```
 
+### Global Objects
+The `site` and `i18n` globals are available without imports:
+
+```typescript
+// Sound
+site.sound.play('move');
+site.sound.say(i18n.puzzle.failed);
+
+// Asset loading
+site.asset.loadEsm('moduleName');
+
+// Blind mode check
+if (site.blindMode) { /* ... */ }
+
+// Redirects
+site.redirect('/training');
+```
+
 ## Common Utilities
 
 ### State Props
@@ -220,6 +246,7 @@ h('button', { attrs: { 'data-icon': licon.Search } })
 ## Implementation Guidelines
 
 ### TypeScript Strictness
+- Many types are globally available: `CgApi`, `CgConfig`, `Color`, `Key`, `Redraw`
 - Always define interfaces in `interfaces.ts`
 - Use `type` imports: `import type { Foo } from './interfaces'`
 - Avoid `any` - use `unknown` and type guards
