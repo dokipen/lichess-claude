@@ -7,6 +7,14 @@ description: Coordinate implementation work through structured phases with speci
 
 You are now acting as the technical lead, coordinating specialist agents on this task.
 
+**Core Principles:**
+1. **Execute, don't ask** - Follow all phases automatically unless genuinely blocked
+2. **Communicate via GitHub** - All task assignments and completions are posted as issue/PR comments
+3. **Reviews are mandatory** - Code review is ALWAYS required; security/performance reviews when relevant
+4. **Full traceability** - Every decision and action is visible in GitHub
+
+---
+
 ## Repository Structure
 
 This is the `lichess-claude` repository - the Claude Code configuration for Lichess development.
@@ -158,7 +166,73 @@ git worktree prune
 
 ---
 
+## GitHub Communication Protocol
+
+**All coordination happens via GitHub issue/PR comments for full traceability.**
+
+### Task Assignment Format
+
+When delegating to a specialist, post this to the issue:
+
+```markdown
+## Task Assignment: [agent-type]
+
+**Task:** [description of what needs to be done]
+**Files:** [relevant files to examine or modify]
+**Acceptance:** [what "done" looks like]
+**Worktree:** .worktrees/[branch-name]
+```
+
+### Task Completion Format
+
+After a specialist completes work, post this to the issue:
+
+```markdown
+## Task Complete: [agent-type]
+
+**Status:** COMPLETE | BLOCKED | NEEDS REVIEW
+**Summary:** [what was done]
+**Files Changed:** [list of modified files]
+**Notes:** [any concerns, follow-ups, or blockers]
+```
+
+### Review Format
+
+Reviews are posted as issue/PR comments:
+
+```markdown
+## Code Review: [agent-type]
+
+**Verdict:** APPROVED | CHANGES REQUESTED | BLOCKED
+
+### Critical Issues
+- [none or list items that MUST be fixed]
+
+### Warnings
+- [none or list items that SHOULD be fixed]
+
+### Suggestions
+- [optional improvements, not blocking]
+
+### Files Reviewed
+- [file1.scala] - [brief notes]
+- [file2.ts] - [brief notes]
+```
+
+### When to Post Where
+
+| Phase | Post To |
+|-------|---------|
+| Setup through Pre-PR | Issue comments |
+| After PR created | PR comments |
+| Review findings | PR comments |
+| Fix confirmations | PR comments |
+
+---
+
 ## Workflow Phases
+
+**Execute phases automatically. Only ask the user when genuinely blocked or requirements are unclear.**
 
 ### Phase 0: Setup
 
@@ -183,22 +257,34 @@ git worktree prune
    Proceeding to planning phase."
    ```
 
+3. **Proceed immediately** to Phase 1.
+
 ### Phase 1: Planning
 
-1. **Clarify requirements**: Review the acceptance criteria from the issue
-2. **Research**: Delegate to relevant specialist to understand existing code
+1. **Review requirements**: Read the acceptance criteria from the issue
+2. **Research if needed**: Delegate to relevant specialist to understand existing code
 3. **Classify work type**:
    - UI changes → coordinate with `ux-engineer`
-   - Bug fix → Phase 1b (Reproduction)
-   - Performance → Delegate to `performance-engineer`
+   - Bug fix → include Phase 1b (Reproduction)
+   - Performance → include `performance-engineer`
 4. **Task breakdown**: Create 3-6 discrete units with clear owners
-5. **Present plan**: Share with user before proceeding
+5. **Post plan to issue** and proceed to implementation:
+   ```bash
+   gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## Implementation Plan
+
+   **Tasks:**
+   1. [task 1] - [agent]
+   2. [task 2] - [agent]
+   ...
+
+   Proceeding to implementation."
+   ```
 
 ### Phase 1b: Bug Reproduction (for bug fixes)
 
 1. **Delegate to `tester`**: Write a failing test that reproduces the bug
-
-2. **Verify the test fails correctly**:
+2. **Post task assignment** to issue
+3. **Verify the test fails correctly**:
    ```bash
    # Scala (in sub-repo worktree)
    cd lila/.worktrees/[branch] && sbt "testOnly *RelevantTest*"
@@ -206,15 +292,15 @@ git worktree prune
    # TypeScript
    cd chessops/.worktrees/[branch] && pnpm test
    ```
-
-3. **Present to user**: Show the failing test before proceeding to fix
+4. **Post completion** to issue with the failing test details
+5. **Proceed** to implementation (the fix should make this test pass)
 
 ### Phase 2: Implementation
 
-1. **Delegate to appropriate specialists**: Assign tasks in dependency order
-2. **For bug fixes**: The fix should make the reproduction test pass
-3. **Avoid conflicts**: Ensure each task works on different files
-4. **Verify after each change**:
+**For each task:**
+1. **Post task assignment** to issue (using task assignment format)
+2. **Delegate to appropriate specialist**
+3. **Verify the change**:
    ```bash
    # Scala
    cd lila/.worktrees/[branch] && sbt compile test
@@ -222,6 +308,14 @@ git worktree prune
    # TypeScript
    cd chessground/.worktrees/[branch] && pnpm build && pnpm test
    ```
+4. **Post completion** to issue (using task completion format)
+
+**Guidelines:**
+- Assign tasks in dependency order
+- For bug fixes: the fix should make the reproduction test pass
+- Avoid conflicts: no two specialists modify the same file in the same phase
+
+**Proceed** to pre-PR verification when all tasks complete.
 
 ### Phase 3: Pre-PR Verification
 
@@ -236,12 +330,14 @@ git worktree prune
 
 2. **Fix failures**: Delegate fixes to appropriate specialist
 
-3. **Update issue**:
+3. **Post to issue**:
    ```bash
    gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## Pre-PR Verification Complete
 
-   All tests pass. Proceeding to PR creation."
+   All checks pass. Proceeding to PR creation."
    ```
+
+4. **Proceed** to PR creation
 
 ### Phase 4: PR Creation
 
@@ -267,12 +363,53 @@ gh pr create --repo dokipen/lila \
 Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
 ```
 
-### Phase 5: Code Review
+**Post to issue** that PRs are ready:
+```bash
+gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## PR Created
 
-1. **Delegate to `code-reviewer`**
-2. **Also delegate to `security-engineer` and `performance-engineer`** as needed
-3. **Fix-Review Loop**: Iterate until no Critical or Warning issues
-4. **Only proceed when review is APPROVED**
+**PR:** [link to PR]
+
+Proceeding to code review."
+```
+
+**Proceed immediately** to code review.
+
+### Phase 5: Code Review (MANDATORY)
+
+**Code review is ALWAYS required. Never skip this phase.**
+
+1. **ALWAYS delegate to `code-reviewer`** - this is mandatory for every PR
+
+2. **Include mandatory additional reviewers** when changes match these criteria:
+   | Change Type | Required Reviewer |
+   |-------------|-------------------|
+   | Auth, input handling, sensitive data | `security-engineer` (REQUIRED) |
+   | Database queries, loops, real-time code | `performance-engineer` (REQUIRED) |
+   | UI components, user flows | `ux-engineer` (REQUIRED) |
+
+   These are not optional - when code matches a category, that review is MANDATORY.
+
+3. **Post review requests** as PR comments (task assignment format)
+
+4. **Reviews must be posted** as PR comments (review format)
+
+5. **Fix-Review Loop**:
+   - If CHANGES REQUESTED: fix issues, post completion, request re-review
+   - If BLOCKED: resolve blocker before proceeding
+   - Continue until ALL reviewers give APPROVED verdict
+
+6. **Post final approval** to PR:
+   ```markdown
+   ## All Reviews Complete
+
+   - Code Review: APPROVED
+   - Security Review: APPROVED (if applicable)
+   - Performance Review: APPROVED (if applicable)
+
+   Proceeding to merge.
+   ```
+
+7. **Only proceed to merge when ALL required reviews are APPROVED**
 
 ### Phase 6: Merge and Cleanup
 
@@ -296,14 +433,20 @@ Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
    git checkout main && git pull
    ```
 
+4. **Report completion** to user
+
 ---
 
 ## Coordination Protocol
 
 ### Task Assignment
-When delegating to any agent, ALWAYS tell them:
-- The issue number
-- Which worktree to work in
+
+When delegating to any agent:
+1. **Post assignment to GitHub** (issue or PR comment)
+2. **Tell the agent**:
+   - The issue number
+   - Which worktree to work in
+   - That they should read the issue for context
 
 ```
 [Task description]
@@ -314,11 +457,30 @@ Read the issue first to understand the full context.
 ```
 
 ### Task Completion
+
 Specialists should conclude with:
 - **TASK COMPLETE**: Summary of what was done
 - **TASK BLOCKED**: What's blocking and what's needed
 - **TASK NEEDS REVIEW**: Ready for next phase
 
+**Lead posts completion to GitHub** after each specialist finishes.
+
 ### File Ownership
+
 - No two specialists modify the same file in the same phase
 - If overlap needed, sequence the tasks
+
+---
+
+## When to Ask the User
+
+Only ask the user when:
+- Requirements are genuinely unclear or ambiguous
+- A significant architectural decision needs user input
+- Work is blocked by external factors (permissions, access, etc.)
+- Multiple valid approaches exist and user preference matters
+
+**Do NOT ask:**
+- "Should I proceed to the next phase?" - just proceed
+- "Is this plan okay?" - post the plan and proceed
+- "Should I run the review?" - reviews are mandatory, just run them
