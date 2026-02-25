@@ -25,7 +25,17 @@ echo "=================================="
 
 # Step 1: Delete remote branch (may already be deleted by PR merge)
 echo "Deleting remote branch..."
-git push origin --delete "${BRANCH_NAME}" 2>/dev/null && echo "  Remote branch deleted" || echo "  Remote branch already deleted or doesn't exist"
+if git push origin --delete "${BRANCH_NAME}" 2>&1; then
+  echo "  Remote branch deleted"
+else
+  # Check if it's just a "not found" error vs a real failure
+  if git ls-remote --exit-code --heads origin "${BRANCH_NAME}" >/dev/null 2>&1; then
+    echo "  Warning: Failed to delete remote branch (may be a network or permission issue)" >&2
+    echo "  You may need to delete it manually: git push origin --delete ${BRANCH_NAME}" >&2
+  else
+    echo "  Remote branch already deleted or doesn't exist"
+  fi
+fi
 
 # Step 2: Remove worktree directory
 echo "Removing worktree directory..."
@@ -50,9 +60,9 @@ echo "Pruning orphaned worktree references..."
 git worktree prune
 echo "  Pruned"
 
-# Step 4: Delete local branch
+# Step 4: Delete local branch (force delete since we're explicitly cleaning up)
 echo "Deleting local branch..."
-git branch -d "${BRANCH_NAME}" 2>/dev/null && echo "  Local branch deleted" || echo "  Local branch already deleted or doesn't exist"
+git branch -D "${BRANCH_NAME}" 2>/dev/null && echo "  Local branch deleted" || echo "  Local branch already deleted or doesn't exist"
 
 echo ""
 echo "Done! Worktree ${BRANCH_NAME} cleaned up."

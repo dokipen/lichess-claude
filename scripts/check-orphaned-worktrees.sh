@@ -17,8 +17,13 @@ found_orphans=0
 for dir in "$WORKTREES_DIR"/*/; do
   [ -d "$dir" ] || continue
 
-  # Get absolute path for comparison
-  abs_dir=$(cd "$dir" && pwd)
+  # Get absolute path for comparison, handle failures gracefully
+  if ! abs_dir=$(cd "$dir" 2>/dev/null && pwd); then
+    echo "Warning: Cannot access directory: $dir"
+    echo "  Directory appears corrupted. Run: rm -rf $dir"
+    found_orphans=1
+    continue
+  fi
 
   # Check if this directory is tracked by git worktree
   if ! echo "$tracked_worktrees" | grep -qF "$abs_dir"; then
