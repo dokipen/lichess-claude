@@ -63,11 +63,13 @@ Example: Issue #42 requires changes to lichess-claude AND lila:
 ```bash
 # Step 1: Create worktree in lichess-claude (uses origin/main)
 ./scripts/create-worktree.sh 42-add-opening-practice
+cd .worktrees/42-add-opening-practice
 
 # Step 2: Create MATCHING worktree in the sub-repo (uses origin/master)
-cd lila
+cd ../../lila
 mkdir -p .worktrees
 git worktree add .worktrees/42-add-opening-practice -b 42-add-opening-practice origin/master
+cd .worktrees/42-add-opening-practice
 
 # Now you have:
 # .worktrees/42-add-opening-practice/           <- lichess-claude changes
@@ -136,6 +138,8 @@ git worktree prune
    ```bash
    gh issue edit [NUMBER] --add-label "in-progress" --repo dokipen/lichess-claude
    ```
+
+**Do not proceed to Phase 0 until an issue with clear acceptance criteria exists.**
 
 ---
 

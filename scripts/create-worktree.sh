@@ -65,6 +65,10 @@ fi
 # Create worktrees directory if needed
 mkdir -p "$WORKTREES_DIR"
 
+# Fetch latest from remote to ensure we have up-to-date refs
+echo "Fetching latest from origin..."
+git fetch origin main
+
 # Create the worktree and branch
 echo "Creating worktree and branch '$BRANCH_NAME'..."
 git worktree add "$WORKTREES_DIR/$BRANCH_NAME" -b "$BRANCH_NAME" origin/main

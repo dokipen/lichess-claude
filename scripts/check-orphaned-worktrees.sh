@@ -10,13 +10,18 @@ if [ ! -d "$WORKTREES_DIR" ]; then
   exit 0
 fi
 
+# Get list of tracked worktree paths using porcelain format for reliable parsing
+tracked_worktrees=$(git worktree list --porcelain | grep "^worktree " | cut -d' ' -f2-)
+
 found_orphans=0
 for dir in "$WORKTREES_DIR"/*/; do
   [ -d "$dir" ] || continue
-  dir_name=$(basename "$dir")
+
+  # Get absolute path for comparison
+  abs_dir=$(cd "$dir" && pwd)
 
   # Check if this directory is tracked by git worktree
-  if ! git worktree list | grep -q "\.worktrees/$dir_name "; then
+  if ! echo "$tracked_worktrees" | grep -qF "$abs_dir"; then
     echo "Warning: Found orphaned worktree directory: $dir"
     echo "  Run: rm -rf $dir"
     found_orphans=1

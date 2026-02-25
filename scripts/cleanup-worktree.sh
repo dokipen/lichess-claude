@@ -30,10 +30,17 @@ git push origin --delete "${BRANCH_NAME}" 2>/dev/null && echo "  Remote branch d
 # Step 2: Remove worktree directory
 echo "Removing worktree directory..."
 if [ -d "${WORKTREE_DIR}" ]; then
-  git worktree remove "${WORKTREE_DIR}" 2>/dev/null || \
-    git worktree remove --force "${WORKTREE_DIR}" 2>/dev/null || \
+  if git worktree remove "${WORKTREE_DIR}" 2>/dev/null; then
+    echo "  Worktree removed: ${WORKTREE_DIR}"
+  elif git worktree remove --force "${WORKTREE_DIR}" 2>/dev/null; then
+    echo "  Worktree force-removed: ${WORKTREE_DIR}"
+  else
+    echo "  Warning: git worktree remove failed, using rm -rf" >&2
     rm -rf "${WORKTREE_DIR}"
-  echo "  Worktree removed: ${WORKTREE_DIR}"
+    echo "  Directory removed manually: ${WORKTREE_DIR}"
+    echo "  Running git worktree prune to sync git state..."
+    git worktree prune
+  fi
 else
   echo "  Worktree directory not found: ${WORKTREE_DIR}"
 fi

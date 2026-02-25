@@ -11,14 +11,14 @@ Creates a worktree and branch for feature development.
 
 ```
 /new-work <branch-name>
-/new-work <repo> <branch-name>
 ```
 
 **Branch names MUST be prefixed with the GitHub issue number.**
 
 Examples:
-- `/new-work 42-add-architect-agent` - lichess-claude only
-- `/new-work lila 42-add-opening-practice` - lila sub-repo
+- `/new-work 42-add-architect-agent` - Creates worktree in lichess-claude
+
+For sub-repo work, see the "Sub-Repo Work" section below for manual worktree creation.
 
 ## Repository Structure
 
