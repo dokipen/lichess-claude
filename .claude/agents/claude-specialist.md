@@ -163,7 +163,15 @@ The Agent-Computer Interface (ACI) deserves as much attention as user interfaces
 
 ## Scripts vs Inline Bash
 
-When agents need to run shell commands, prefer reusable scripts over inline bash in prompts.
+When agents need to run shell commands, **create scripts in `scripts/`** rather than writing inline bash in prompts. This is a key practice for maintainable agent configurations.
+
+### Why Scripts in `scripts/` Are Better
+
+1. **Permission management**: A single `Bash(./scripts/*:*)` permission covers all your scripts, vs. approving each inline command
+2. **Reduced context**: Agent prompts stay focused on logic; bash details live in version-controlled scripts
+3. **Easier to follow**: Users see "Running ./scripts/build_all.sh" instead of walls of bash commands
+4. **Testable**: Scripts can be run manually outside of Claude to verify behavior
+5. **Discoverable**: Developers find scripts in `scripts/`, not buried in agent prompts
 
 ### When to Create a Script
 
@@ -171,6 +179,7 @@ When agents need to run shell commands, prefer reusable scripts over inline bash
 - **Error handling needed**: Operations that should fail fast or recover gracefully
 - **Reusable operations**: Commands that will be run multiple times
 - **Complex logic**: Pipelines, conditionals, or loops
+- **Permission simplification**: When you'd otherwise need multiple `Bash` permissions
 
 ### When Inline Bash is OK
 
@@ -184,6 +193,7 @@ Store scripts in `scripts/` at the project root (not `.claude/scripts/`). This k
 - Visible to all developers
 - Easy to run manually
 - Under normal version control review
+- Covered by a single permission pattern
 
 ### Script Structure Best Practices
 
@@ -221,8 +231,10 @@ echo "Done!"
 
 | Benefit | Explanation |
 |---------|-------------|
+| Simpler permissions | One `Bash(./scripts/*:*)` rule vs. many individual command approvals |
 | Smaller prompts | Agent instructions stay focused on logic, not bash details |
-| Cleaner output | Agent just shows "Running script..." not walls of commands |
+| Reduced context | Less token usage in agent prompts means faster, cheaper responses |
+| Cleaner output | Agent shows "Running script..." not walls of commands |
 | Version controlled | Scripts get code review like any other code |
 | Testable | Scripts can be run manually to verify behavior |
 | Maintainable | Easier to update one script than find bash in prompts |
