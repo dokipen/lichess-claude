@@ -148,12 +148,14 @@ The Agent-Computer Interface (ACI) deserves as much attention as user interfaces
 
 ### Tool Selection by Role
 
+**Note**: All agents should include `Bash` for running build checks, tests, and validation scripts.
+
 | Role | Tools | Rationale |
 |------|-------|-----------|
 | Coder | Read, Edit, Write, Bash, Glob, Grep | Full modification access |
 | Reviewer | Read, Grep, Glob, Bash | Read-only + run checks |
-| Researcher | Read, Glob, Grep, WebFetch, WebSearch | Exploration only |
-| Tester | Bash, Read, Glob | Execute tests, read results |
+| Researcher | Read, Glob, Grep, Bash, WebFetch, WebSearch | Exploration + validation |
+| Tester | Bash, Read, Glob, Grep | Execute tests, search results |
 
 ### Model Selection
 
