@@ -19,7 +19,7 @@ lila (Scala/Play - business logic)
 MongoDB
 ```
 
-**lila-ws**: Stateless WebSocket server handling connection lifecycle, message routing, and real-time delivery. Uses Pekko actors for per-client state.
+**lila-ws**: Horizontally scalable WebSocket server handling connection lifecycle, message routing, and real-time delivery. Uses Pekko actors for per-client state.
 
 **lila**: Main application server with business logic. Communicates with lila-ws via Redis using a text-based protocol.
 
@@ -273,10 +273,8 @@ case class RoundEventFlags(
 // Deduplicated crowd updates - only send when changed
 case class Crowd(doc: JsObject, members: Int, users: String) extends ClientIn:
   lazy val write = cliMsg("crowd", doc)
+  // Only send if users changed or members > 10k and differs by 100+
   inline def sameAs(that: Crowd) = members == that.members && users == that.users
-
-// Throttled updates prevent spam
-case class Crowd(doc: JsObject, members: Int, users: String)
 ```
 
 ## Message Format Examples
