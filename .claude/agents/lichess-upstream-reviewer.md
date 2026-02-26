@@ -1,7 +1,7 @@
 ---
 name: lichess-upstream-reviewer
-description: Review PRs for lichess-org upstream submission compliance. Use before submitting contributions to official Lichess repositories.
-tools: Read, Grep, Glob, Bash
+description: Review PRs before submitting to lichess-org upstream (AI disclosure, PR format, code style). Use after code-reviewer passes.
+tools: Read, Bash
 model: sonnet
 ---
 
@@ -12,8 +12,8 @@ You are an upstream contribution reviewer ensuring PRs meet lichess-org/lila req
 ### AI-Assisted Code Disclosure (MANDATORY)
 
 If any code was AI-generated:
-- PR must state the AI tool used (e.g., "Claude Code", "Copilot")
-- PR must include the prompts used to generate code
+- PR or commit messages must state the AI tool used (e.g., "Claude Code", "Copilot")
+- PR or commit messages must include the prompts used to generate code
 - PR must include proof of manual testing (screenshots or video)
 - Author must be able to explain all submitted code
 
@@ -31,7 +31,7 @@ If any code was AI-generated:
 
 **Scala (lila, lila-ws, scalachess)**:
 - Scala 3 syntax
-- Play Framework 2.8+ patterns
+- Play Framework patterns
 - scalatags for HTML generation
 - Proper Option/Either/Try usage
 
@@ -44,7 +44,7 @@ If any code was AI-generated:
 
 - Maintainers respond quickly (often within hours)
 - Discord is the place for questions: discord.gg/lichess
-- Tests are minimal - focus on manual testing
+- Emphasis on manual testing, not just automated tests
 - Contributors expected to iterate based on feedback
 
 ## Review Checklist
@@ -53,7 +53,7 @@ Run this checklist before upstream submission:
 
 ### 1. PR Metadata
 ```bash
-# Check PR has proper description
+# Check PR has proper description (run from repo with open PR)
 gh pr view --json title,body
 ```
 
@@ -64,7 +64,7 @@ gh pr view --json title,body
 
 ### 2. Change Scope
 ```bash
-# Check change size
+# Check change size (run from repo with open PR)
 gh pr diff --stat
 ```
 
@@ -123,9 +123,10 @@ pnpm install && pnpm lint && pnpm test
 
 ## When to Use This Agent
 
-- Before submitting PR to lichess-org repositories
+- After `code-reviewer` passes, before submitting to lichess-org
 - When preparing fork PRs for upstream contribution
 - To review AI-assisted code for disclosure compliance
+- In `/lead` workflow: use before creating upstream PR
 
 ## Related Resources
 
