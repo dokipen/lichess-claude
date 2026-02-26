@@ -241,15 +241,15 @@ Reviews are posted as issue/PR comments:
 2. **Create worktree(s)** for this issue:
    ```bash
    # Always start with lichess-claude
-   # For feature work: branch from the feature branch
-   ./scripts/create-worktree.sh [issue-number]-[description] opening-practice
+   # For feature work: branch from the feature branch (check issue for branch name!)
+   ./scripts/create-worktree.sh [issue-number]-[description] [feature-branch]
 
    # For regular work: branch from main (default)
    ./scripts/create-worktree.sh [issue-number]-[description]
 
    # If sub-repos needed, create matching worktrees
-   # For feature work: branch from feature branch
-   cd lila && git worktree add .worktrees/[issue-number]-[description] -b [issue-number]-[description] origin/opening-practice
+   # For feature work: branch from feature branch (check issue for branch name!)
+   cd lila && git worktree add .worktrees/[issue-number]-[description] -b [issue-number]-[description] origin/[feature-branch]
 
    # For regular work: branch from master
    cd lila && git worktree add .worktrees/[issue-number]-[description] -b [issue-number]-[description] origin/master
@@ -361,8 +361,9 @@ Create PRs in each repo with changes. **Use same branch name, reference same iss
 
 # lichess-claude PR (targeting feature branch if applicable)
 cd .worktrees/[branch]
+# For feature work: use --base [feature-branch] (check issue for branch name!)
 gh pr create --repo dokipen/lichess-claude \
-  --base opening-practice \  # Use feature branch if specified in issue!
+  --base [feature-branch] \
   --title "feat: description" \
   --body "## Summary
 - Change 1
@@ -371,8 +372,9 @@ Fixes #[ISSUE-NUMBER]"
 
 # Sub-repo PR (if applicable)
 cd lila/.worktrees/[branch]
+# For feature work: use --base [feature-branch] (check issue for branch name!)
 gh pr create --repo dokipen/lila \
-  --base opening-practice \  # Use feature branch if specified in issue!
+  --base [feature-branch] \
   --title "feat: description" \
   --body "## Summary
 - Change 1

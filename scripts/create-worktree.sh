@@ -70,6 +70,13 @@ fi
 # Create worktrees directory if needed
 mkdir -p "$WORKTREES_DIR"
 
+# Verify base branch exists on remote
+if ! git ls-remote --exit-code --heads origin "$BASE_BRANCH" >/dev/null 2>&1; then
+  echo "Error: Base branch '$BASE_BRANCH' does not exist on remote"
+  echo "Available branches: main, master, or a feature branch like 'opening-practice'"
+  exit 1
+fi
+
 # Fetch latest from remote to ensure we have up-to-date refs
 echo "Fetching latest from origin..."
 git fetch origin "$BASE_BRANCH"
