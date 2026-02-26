@@ -55,6 +55,19 @@ When developing features intended for upstream contribution to lichess-org repos
   - `https://api.github.com/repos/...`
 - Examples: `gh issue view`, `gh pr view`, `gh pr list`, `gh api repos/dokipen/lichess-claude/...`
 
+## Agent Teams (Experimental)
+
+This project has the experimental agent teams feature enabled. Agent teams allow coordinating multiple Claude instances working in parallel.
+
+**When to use agent teams:**
+- Parallel code reviews (security, performance, tests simultaneously)
+- Large features with independent pieces that won't conflict
+- Debugging with competing hypotheses
+
+**When to use subagents instead:**
+- Simple delegated tasks with a single focus
+- Tasks that need to report back to the main conversation
+
 ## Verification
 
 ### Scala (lila, lila-ws, scalachess)
