@@ -1,10 +1,12 @@
 #!/bin/bash
 # Create a new worktree and branch for feature development
 #
-# Usage: ./scripts/create-worktree.sh <branch-name>
+# Usage: ./scripts/create-worktree.sh <branch-name> [base-branch]
 # Example: ./scripts/create-worktree.sh 42-add-sound-effects
+# Example: ./scripts/create-worktree.sh 42-add-sound-effects opening-practice
 #
 # Branch names MUST be prefixed with the GitHub issue number.
+# If base-branch is specified, the worktree branches from that instead of main.
 
 set -e
 
@@ -17,14 +19,17 @@ cd "$REPO_ROOT"
 
 # Check for required argument
 if [ -z "$1" ]; then
-  echo "Usage: $0 <branch-name>"
+  echo "Usage: $0 <branch-name> [base-branch]"
   echo "Example: $0 42-add-sound-effects"
+  echo "Example: $0 42-add-sound-effects opening-practice"
   echo ""
   echo "Branch names MUST start with the issue number (e.g., 42-feature-name)"
+  echo "If base-branch is specified, branches from that instead of main."
   exit 1
 fi
 
 BRANCH_NAME="$1"
+BASE_BRANCH="${2:-main}"
 
 # Validate branch name format (must start with issue number)
 if ! echo "$BRANCH_NAME" | grep -qE '^[0-9]+-'; then
@@ -67,16 +72,17 @@ mkdir -p "$WORKTREES_DIR"
 
 # Fetch latest from remote to ensure we have up-to-date refs
 echo "Fetching latest from origin..."
-git fetch origin main
+git fetch origin "$BASE_BRANCH"
 
 # Create the worktree and branch
-echo "Creating worktree and branch '$BRANCH_NAME'..."
-git worktree add "$WORKTREES_DIR/$BRANCH_NAME" -b "$BRANCH_NAME" origin/main
+echo "Creating worktree and branch '$BRANCH_NAME' from 'origin/$BASE_BRANCH'..."
+git worktree add "$WORKTREES_DIR/$BRANCH_NAME" -b "$BRANCH_NAME" "origin/$BASE_BRANCH"
 
 echo ""
 echo "Worktree created successfully!"
 echo "  Directory: $WORKTREES_DIR/$BRANCH_NAME"
 echo "  Branch: $BRANCH_NAME"
+echo "  Based on: origin/$BASE_BRANCH"
 echo ""
 echo "To work in this worktree:"
 echo "  cd $WORKTREES_DIR/$BRANCH_NAME"

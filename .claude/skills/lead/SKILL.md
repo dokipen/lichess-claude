@@ -236,12 +236,22 @@ Reviews are posted as issue/PR comments:
 
 ### Phase 0: Setup
 
-1. **Create worktree(s)** for this issue:
+1. **Check for feature branch**: Read the issue body. If it has a "Branch Strategy" section specifying a feature branch (e.g., `opening-practice`), worktrees must branch from that feature branch, not main/master.
+
+2. **Create worktree(s)** for this issue:
    ```bash
    # Always start with lichess-claude
+   # For feature work: branch from the feature branch
+   ./scripts/create-worktree.sh [issue-number]-[description] opening-practice
+
+   # For regular work: branch from main (default)
    ./scripts/create-worktree.sh [issue-number]-[description]
 
    # If sub-repos needed, create matching worktrees
+   # For feature work: branch from feature branch
+   cd lila && git worktree add .worktrees/[issue-number]-[description] -b [issue-number]-[description] origin/opening-practice
+
+   # For regular work: branch from master
    cd lila && git worktree add .worktrees/[issue-number]-[description] -b [issue-number]-[description] origin/master
    ```
 
@@ -343,10 +353,16 @@ Reviews are posted as issue/PR comments:
 
 Create PRs in each repo with changes. **Use same branch name, reference same issue.**
 
+**IMPORTANT**: Check the issue for a "Branch Strategy" section. If the issue is part of an upstream feature (like Opening Practice), PRs must target the **feature branch**, not main/master.
+
 ```bash
-# lichess-claude PR
+# Check if issue specifies a feature branch target
+# Look for "Branch Strategy" section in the issue body
+
+# lichess-claude PR (targeting feature branch if applicable)
 cd .worktrees/[branch]
 gh pr create --repo dokipen/lichess-claude \
+  --base opening-practice \  # Use feature branch if specified in issue!
   --title "feat: description" \
   --body "## Summary
 - Change 1
@@ -356,12 +372,18 @@ Fixes #[ISSUE-NUMBER]"
 # Sub-repo PR (if applicable)
 cd lila/.worktrees/[branch]
 gh pr create --repo dokipen/lila \
+  --base opening-practice \  # Use feature branch if specified in issue!
   --title "feat: description" \
   --body "## Summary
 - Change 1
 
 Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
 ```
+
+**Default PR base branches** (when NOT part of a feature):
+- lichess-claude: `main`
+- lila, lila-ws, chessground, scalachess: `master`
+- chessops: `main`
 
 **Post to issue** that PRs are ready:
 ```bash
