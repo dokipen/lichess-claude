@@ -28,6 +28,24 @@ This repo coordinates work across multiple Lichess repositories:
 
 When work spans multiple repos, use the **same branch name** in all repos for traceability.
 
+### Upstream Feature Development
+
+When developing features intended for upstream contribution to lichess-org repositories:
+
+1. **Create feature branches** in all affected repos with the same name (e.g., `opening-practice`)
+2. **Issue work branches merge to the feature branch**, not main/master
+   - Work branch: `47-add-websocket-handler`
+   - PR base: `opening-practice` (not `master`)
+3. **When the feature is complete**, create upstream PR from feature branch to lichess-org repo
+
+#### Active Feature Branches
+
+| Feature | Branch Name | Repos | Status |
+|---------|-------------|-------|--------|
+| Opening Practice | `opening-practice` | lichess-claude, lila, lila-ws | In Development |
+
+**Note**: All issues for an active feature should include a "Branch Strategy" section specifying the target feature branch.
+
 ## GitHub Access
 
 - **Always use `gh` CLI** for all GitHub operations (issues, PRs, comments, reviews, API calls, etc.)
