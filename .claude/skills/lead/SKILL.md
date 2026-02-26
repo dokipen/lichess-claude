@@ -12,6 +12,7 @@ You are now acting as the technical lead, coordinating specialist agents on this
 2. **Communicate via GitHub** - All task assignments and completions are posted as issue/PR comments
 3. **Reviews are mandatory** - Code review is ALWAYS required; security/performance reviews when relevant
 4. **Full traceability** - Every decision and action is visible in GitHub
+5. **Human understanding required** - User must understand and be able to explain all code before merge
 
 ---
 
@@ -368,6 +369,18 @@ gh pr create --repo dokipen/lichess-claude \
   --body "## Summary
 - Change 1
 
+## How It Works
+
+### Implementation Approach
+[Explain the high-level approach taken to implement this change]
+
+### Key Decisions
+- **[Decision 1]**: [Why this approach vs alternatives]
+- **[Decision 2]**: [Why this approach vs alternatives]
+
+### Non-Obvious Code Patterns
+- [Explain any patterns that might not be immediately clear to reviewers]
+
 Fixes #[ISSUE-NUMBER]"
 
 # Sub-repo PR (if applicable)
@@ -378,6 +391,18 @@ gh pr create --repo dokipen/lila \
   --title "feat: description" \
   --body "## Summary
 - Change 1
+
+## How It Works
+
+### Implementation Approach
+[Explain the high-level approach taken to implement this change]
+
+### Key Decisions
+- **[Decision 1]**: [Why this approach vs alternatives]
+- **[Decision 2]**: [Why this approach vs alternatives]
+
+### Non-Obvious Code Patterns
+- [Explain any patterns that might not be immediately clear to reviewers]
 
 Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
 ```
@@ -430,12 +455,62 @@ Proceeding to code review."
    - Security Review: APPROVED (if applicable)
    - Performance Review: APPROVED (if applicable)
 
-   Proceeding to merge.
+   Proceeding to human review.
    ```
 
-7. **Only proceed to merge when ALL required reviews are APPROVED**
+7. **Only proceed to Phase 5b when ALL required reviews are APPROVED**
 
-### Phase 6: Merge and Cleanup
+### Phase 5b: Human Review (MANDATORY)
+
+**After agent reviews pass, present changes to user for understanding review.**
+
+This phase ensures the user can explain the code to upstream maintainers, as required by Lichess contribution guidelines.
+
+1. **Summarize changes** with file-by-file explanation:
+
+   ```markdown
+   ## Code Changes Summary
+
+   ### [filename.scala]
+   **What changed:** [description]
+   **Why:** [reasoning]
+   **Key code:** [brief explanation of non-obvious parts]
+   ```
+
+2. **Invite questions**:
+   "Do you have questions about any of these changes? You'll need to be able to explain this code to upstream maintainers."
+
+3. **Wait for confirmation**:
+   - User asks questions -> Answer them, repeat until satisfied
+   - User confirms understanding -> Proceed to merge
+
+4. **Do NOT proceed** until user explicitly confirms they can explain the code
+
+**Example interaction:**
+
+```markdown
+## Code Changes Summary
+
+### modules/study/src/main/Chapter.scala
+**What changed:** Removed unused `isDefaultName` field from Chapter case class
+**Why:** Field was set but never read, dead code cleanup
+**Key code:** Simple field removal, no behavioral change
+
+### ui/analyse/src/study/chapterNewForm.ts
+**What changed:** Added `isDefaultName: true` to chapter creation payload
+**Why:** Fixes bug #19621 where chapter names weren't being reset
+**Key code:** The `isDefaultName` flag tells the server this is an auto-generated
+name that should be replaced when the user provides a custom name
+
+---
+
+Do you have questions about any of these changes?
+You'll need to be able to explain this code to upstream maintainers.
+```
+
+**Only proceed to Phase 7 after user confirms understanding.**
+
+### Phase 7: Merge and Cleanup
 
 1. **Merge PRs** (sub-repos first if they're dependencies):
    ```bash
