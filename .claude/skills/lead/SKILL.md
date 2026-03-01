@@ -274,7 +274,12 @@ Reviews are posted as issue/PR comments:
 
 1. **Check for feature branch**: Read the issue body. If it has a "Branch Strategy" section specifying a feature branch (e.g., `opening-practice`), worktrees must branch from that feature branch, not main/master.
 
-2. **Create worktree(s)** for this issue:
+2. **Claim the issue** with the `in-progress` label:
+   ```bash
+   gh issue edit [NUMBER] --add-label "in-progress" --repo $GITHUB_OWNER/lichess-claude
+   ```
+
+3. **Create worktree(s)** for this issue:
    ```bash
    # Always start with lichess-claude
    # For feature work: branch from the feature branch (check issue for branch name!)
@@ -291,7 +296,7 @@ Reviews are posted as issue/PR comments:
    cd lila && git worktree add .worktrees/[issue-number]-[description] -b [issue-number]-[description] origin/master
    ```
 
-2. **Post setup to issue**:
+4. **Post setup to issue**:
    ```bash
    gh issue comment [NUMBER] --repo $GITHUB_OWNER/lichess-claude --body "## Setup Complete
 
@@ -303,7 +308,7 @@ Reviews are posted as issue/PR comments:
    Proceeding to planning phase."
    ```
 
-3. **Proceed immediately** to Phase 1.
+5. **Proceed immediately** to Phase 1.
 
 ### Phase 1: Planning
 
@@ -553,7 +558,12 @@ You'll need to be able to explain this code to upstream maintainers.
    gh pr merge --squash --delete-branch --repo $GITHUB_OWNER/lichess-claude
    ```
 
-2. **Clean up ALL worktrees**:
+2. **Close the issue** (cross-repo PRs won't auto-close issues via `Fixes #N`):
+   ```bash
+   gh issue close [NUMBER] --repo $GITHUB_OWNER/lichess-claude --comment "Closed via PR merge."
+   ```
+
+3. **Clean up ALL worktrees**:
    ```bash
    # lichess-claude
    ./scripts/cleanup-worktree.sh [branch-name]
@@ -562,12 +572,12 @@ You'll need to be able to explain this code to upstream maintainers.
    cd lila && git worktree remove .worktrees/[branch-name] && git worktree prune
    ```
 
-3. **Update main**:
+4. **Update main**:
    ```bash
    git checkout main && git pull
    ```
 
-4. **Sync feature branches with upstream** (if PR targeted a feature branch):
+5. **Sync feature branches with upstream** (if PR targeted a feature branch):
    ```bash
    # For each sub-repo with a feature branch, merge latest default branch into it
    # This keeps the feature branch current and avoids drift
@@ -592,7 +602,7 @@ You'll need to be able to explain this code to upstream maintainers.
 
    **Skip this step** if the PR targeted main/master directly (no feature branch).
 
-5. **Report completion** to user
+6. **Report completion** to user
 
 ---
 
