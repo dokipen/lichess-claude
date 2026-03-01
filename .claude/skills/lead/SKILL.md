@@ -67,22 +67,38 @@ git push -u origin 42-add-architect-agent
 
 **When work spans multiple repos, use the SAME branch name in ALL repos.**
 
-Example: Issue #42 requires changes to lichess-claude AND lila:
+**IMPORTANT: Check the issue for a "Branch Strategy" section.** If the issue targets a feature branch (e.g., `opening-practice`), ALL worktrees must branch from that feature branch, not main/master. This ensures your work builds on prior PRs already merged into the feature branch.
+
+Example: Issue #42 requires changes to lichess-claude AND lila, targeting the `opening-practice` feature branch:
 
 ```bash
-# Step 1: Create worktree in lichess-claude (uses origin/main)
-./scripts/create-worktree.sh 42-add-opening-practice
+# Step 1: Create worktree in lichess-claude (from feature branch)
+./scripts/create-worktree.sh 42-add-opening-practice opening-practice
 cd .worktrees/42-add-opening-practice
 
-# Step 2: Create MATCHING worktree in the sub-repo (uses origin/master)
+# Step 2: Create MATCHING worktree in the sub-repo (from feature branch)
 cd ../../lila
 mkdir -p .worktrees
-git worktree add .worktrees/42-add-opening-practice -b 42-add-opening-practice origin/master
+git worktree add .worktrees/42-add-opening-practice -b 42-add-opening-practice origin/opening-practice
 cd .worktrees/42-add-opening-practice
 
 # Now you have:
 # .worktrees/42-add-opening-practice/           <- lichess-claude changes
 # lila/.worktrees/42-add-opening-practice/      <- lila changes (same branch name!)
+```
+
+Example without a feature branch (regular work branching from default):
+
+```bash
+# Step 1: Create worktree in lichess-claude (from main)
+./scripts/create-worktree.sh 42-fix-something
+cd .worktrees/42-fix-something
+
+# Step 2: Create MATCHING worktree in the sub-repo (from master)
+cd ../../lila
+mkdir -p .worktrees
+git worktree add .worktrees/42-fix-something -b 42-fix-something origin/master
+cd .worktrees/42-fix-something
 ```
 
 **Why same branch name?** When PRs reference `Fixes #42`, GitHub links them. Using consistent naming makes cross-repo work trackable.
@@ -97,12 +113,20 @@ cd .worktrees/42-add-opening-practice
 
 ### Sub-Repo Worktree Pattern
 
-Each sub-repo (lila, chessground, etc.) uses `.worktrees/` inside its own directory:
+Each sub-repo (lila, chessground, etc.) uses `.worktrees/` inside its own directory.
+
+**Always check the issue's Branch Strategy** to determine the base branch:
 
 ```bash
 cd lila
 mkdir -p .worktrees
+
+# If issue targets a feature branch (e.g., opening-practice):
+git worktree add .worktrees/42-feature-name -b 42-feature-name origin/opening-practice
+
+# If no feature branch (regular work):
 git worktree add .worktrees/42-feature-name -b 42-feature-name origin/master
+
 cd .worktrees/42-feature-name
 # Work here
 ```
@@ -532,7 +556,32 @@ You'll need to be able to explain this code to upstream maintainers.
    git checkout main && git pull
    ```
 
-4. **Report completion** to user
+4. **Sync feature branches with upstream** (if PR targeted a feature branch):
+   ```bash
+   # For each sub-repo with a feature branch, merge latest default branch into it
+   # This keeps the feature branch current and avoids drift
+
+   # Example for lila (feature branch: opening-practice, default: master)
+   cd lila
+   git fetch origin
+   git checkout opening-practice
+   git merge origin/master --no-edit
+   git push origin opening-practice
+
+   # Example for lichess-claude (feature branch: opening-practice, default: main)
+   cd /path/to/lichess
+   git fetch origin
+   git checkout opening-practice
+   git merge origin/main --no-edit
+   git push origin opening-practice
+
+   # Return to main
+   git checkout main
+   ```
+
+   **Skip this step** if the PR targeted main/master directly (no feature branch).
+
+5. **Report completion** to user
 
 ---
 
