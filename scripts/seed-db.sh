@@ -10,7 +10,7 @@ cd "$ROOT_DIR/lila-db-seed/spamdb"
 
 if [ ! -d "venv" ]; then
     echo "Setting up Python virtual environment..."
-    /opt/homebrew/bin/python3.12 -m venv venv
+    python3.12 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
 else

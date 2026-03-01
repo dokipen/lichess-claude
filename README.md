@@ -66,7 +66,7 @@ Lichess requires JDK 21+. After installing, you may need to set `JAVA_HOME`:
 
 ```bash
 # Add to ~/.zshrc or ~/.bash_profile
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+export JAVA_HOME=$(brew --prefix openjdk@21)
 export PATH="$JAVA_HOME/bin:$PATH"
 ```
 
@@ -91,7 +91,7 @@ brew services start mongodb-community@8.0
 mongosh --eval "db.runCommand({ ping: 1 })"
 ```
 
-Data is stored at `/opt/homebrew/var/mongodb` by default.
+Data is stored at `$(brew --prefix)/var/mongodb` by default.
 
 #### Redis
 
@@ -163,7 +163,7 @@ In a terminal:
 
 ```bash
 cd lila-ws
-JAVA_HOME=/opt/homebrew/opt/openjdk@21 sbt "run -Dcsrf.origin=http://localhost:9663"
+JAVA_HOME=$(brew --prefix openjdk@21) sbt "run -Dcsrf.origin=http://localhost:9663"
 ```
 
 Wait until you see: `Listening to 9664`
@@ -174,7 +174,7 @@ In another terminal:
 
 ```bash
 cd lila
-JAVA_HOME=/opt/homebrew/opt/openjdk@21 sbt run
+JAVA_HOME=$(brew --prefix openjdk@21) sbt run
 ```
 
 First run compiles everything (~5 minutes). Wait until you see:
@@ -237,7 +237,7 @@ cd lila
 ## Git Workflow
 
 Repositories are configured with:
-- `origin` → Your fork (dokipen/*)
+- `origin` → Your fork ({your-username}/*)
 - `upstream` → Official repo (lichess-org/*)
 
 ```bash
@@ -260,17 +260,6 @@ git push origin my-feature
 | MongoDB | 27017 | Database |
 | Redis | 6379 | Cache & real-time |
 
-## Key Modules for Opening Trainer
-
-If working on opening/practice features, focus on:
-
-| Component | Backend | Frontend |
-|-----------|---------|----------|
-| Studies | `lila/modules/study/` | `lila/ui/analyse/src/study/` |
-| Practice Mode | `lila/modules/practice/` | `lila/ui/analyse/src/practice/` |
-| Puzzles | `lila/modules/puzzle/` | `lila/ui/puzzle/` |
-| Openings | `lila/modules/opening/` | — |
-
 ## Troubleshooting
 
 ### sbt not found
@@ -281,7 +270,7 @@ source ~/.zprofile  # or ~/.bash_profile
 
 ### Java version issues
 ```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+export JAVA_HOME=$(brew --prefix openjdk@21)
 export PATH="$JAVA_HOME/bin:$PATH"
 ```
 

@@ -11,10 +11,12 @@ brew services start redis 2>/dev/null || echo "Redis already running or failed t
 echo ""
 echo "Services started. Now run in separate terminals:"
 echo ""
+JAVA_HOME_PATH=$(brew --prefix openjdk@21 2>/dev/null || echo "/opt/homebrew/opt/openjdk@21")
+
 echo "Terminal 1 (lila-ws):"
-echo "  cd lila-ws && JAVA_HOME=/opt/homebrew/opt/openjdk@21 sbt 'run -Dcsrf.origin=http://localhost:9663'"
+echo "  cd lila-ws && JAVA_HOME=$JAVA_HOME_PATH sbt 'run -Dcsrf.origin=http://localhost:9663'"
 echo ""
 echo "Terminal 2 (lila):"
-echo "  cd lila && JAVA_HOME=/opt/homebrew/opt/openjdk@21 sbt run"
+echo "  cd lila && JAVA_HOME=$JAVA_HOME_PATH sbt run"
 echo ""
 echo "Then open: http://localhost:9663"

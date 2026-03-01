@@ -147,6 +147,17 @@ git worktree prune
 
 ---
 
+## GitHub Owner Detection
+
+**Before any GitHub operations**, detect the repo owner dynamically:
+```bash
+GITHUB_OWNER=$(gh api user --jq '.login')
+```
+
+Use `$GITHUB_OWNER` in all `--repo` flags. **Never hardcode a GitHub username.**
+
+---
+
 ## Issue-First Workflow
 
 **All work MUST be tracked via GitHub issues.**
@@ -154,13 +165,13 @@ git worktree prune
 ### Before Any Work Begins
 
 1. **Identify which repo(s)** need the issue:
-   - lichess-claude changes → `dokipen/lichess-claude`
-   - lila changes → `dokipen/lila`
+   - lichess-claude changes → `$GITHUB_OWNER/lichess-claude`
+   - lila changes → `$GITHUB_OWNER/lila`
    - Multi-repo → Create linked issues or one primary issue
 
 2. **Search for existing issue**:
    ```bash
-   gh issue list --search "[keywords]" --state open --repo dokipen/lichess-claude
+   gh issue list --search "[keywords]" --state open --repo $GITHUB_OWNER/lichess-claude
    ```
 
 3. **If issue exists**: Verify it has clear acceptance criteria
@@ -169,7 +180,7 @@ git worktree prune
 
 5. **Claim the issue**:
    ```bash
-   gh issue edit [NUMBER] --add-label "in-progress" --repo dokipen/lichess-claude
+   gh issue edit [NUMBER] --add-label "in-progress" --repo $GITHUB_OWNER/lichess-claude
    ```
 
 **Do not proceed to Phase 0 until an issue with clear acceptance criteria exists.**
@@ -282,7 +293,7 @@ Reviews are posted as issue/PR comments:
 
 2. **Post setup to issue**:
    ```bash
-   gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## Setup Complete
+   gh issue comment [NUMBER] --repo $GITHUB_OWNER/lichess-claude --body "## Setup Complete
 
    **Branch:** [issue-number]-[description]
    **Worktrees:**
@@ -305,7 +316,7 @@ Reviews are posted as issue/PR comments:
 4. **Task breakdown**: Create 3-6 discrete units with clear owners
 5. **Post plan to issue** and proceed to implementation:
    ```bash
-   gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## Implementation Plan
+   gh issue comment [NUMBER] --repo $GITHUB_OWNER/lichess-claude --body "## Implementation Plan
 
    **Tasks:**
    1. [task 1] - [agent]
@@ -367,7 +378,7 @@ Reviews are posted as issue/PR comments:
 
 3. **Post to issue**:
    ```bash
-   gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## Pre-PR Verification Complete
+   gh issue comment [NUMBER] --repo $GITHUB_OWNER/lichess-claude --body "## Pre-PR Verification Complete
 
    All checks pass. Proceeding to PR creation."
    ```
@@ -387,7 +398,7 @@ Create PRs in each repo with changes. **Use same branch name, reference same iss
 # lichess-claude PR (targeting feature branch if applicable)
 cd .worktrees/[branch]
 # For feature work: use --base [feature-branch] (check issue for branch name!)
-gh pr create --repo dokipen/lichess-claude \
+gh pr create --repo $GITHUB_OWNER/lichess-claude \
   --base [feature-branch] \
   --title "feat: description" \
   --body "## Summary
@@ -410,7 +421,7 @@ Fixes #[ISSUE-NUMBER]"
 # Sub-repo PR (if applicable)
 cd lila/.worktrees/[branch]
 # For feature work: use --base [feature-branch] (check issue for branch name!)
-gh pr create --repo dokipen/lila \
+gh pr create --repo $GITHUB_OWNER/lila \
   --base [feature-branch] \
   --title "feat: description" \
   --body "## Summary
@@ -428,7 +439,7 @@ gh pr create --repo dokipen/lila \
 ### Non-Obvious Code Patterns
 - [Explain any patterns that might not be immediately clear to reviewers]
 
-Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
+Related to $GITHUB_OWNER/lichess-claude#[ISSUE-NUMBER]"
 ```
 
 **Default PR base branches** (when NOT part of a feature):
@@ -438,7 +449,7 @@ Related to dokipen/lichess-claude#[ISSUE-NUMBER]"
 
 **Post to issue** that PRs are ready:
 ```bash
-gh issue comment [NUMBER] --repo dokipen/lichess-claude --body "## PR Created
+gh issue comment [NUMBER] --repo $GITHUB_OWNER/lichess-claude --body "## PR Created
 
 **PR:** [link to PR]
 
@@ -538,8 +549,8 @@ You'll need to be able to explain this code to upstream maintainers.
 
 1. **Merge PRs** (sub-repos first if they're dependencies):
    ```bash
-   gh pr merge --squash --delete-branch --repo dokipen/lila
-   gh pr merge --squash --delete-branch --repo dokipen/lichess-claude
+   gh pr merge --squash --delete-branch --repo $GITHUB_OWNER/lila
+   gh pr merge --squash --delete-branch --repo $GITHUB_OWNER/lichess-claude
    ```
 
 2. **Clean up ALL worktrees**:
@@ -569,7 +580,7 @@ You'll need to be able to explain this code to upstream maintainers.
    git push origin opening-practice
 
    # Example for lichess-claude (feature branch: opening-practice, default: main)
-   cd /path/to/lichess
+   cd "$(git rev-parse --show-toplevel)"
    git fetch origin
    git checkout opening-practice
    git merge origin/main --no-edit
