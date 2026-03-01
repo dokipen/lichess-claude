@@ -206,7 +206,7 @@ init_db_seed() {
 
     if [ ! -d "venv" ]; then
         info "Setting up Python virtual environment for db seeding..."
-        /opt/homebrew/bin/python3.12 -m venv venv
+        python3.12 -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
         deactivate
@@ -228,11 +228,11 @@ print_summary() {
     echo ""
     echo "1. Start lila-ws (Terminal 1):"
     echo "   cd lila-ws"
-    echo "   JAVA_HOME=/opt/homebrew/opt/openjdk@21 sbt 'run -Dcsrf.origin=http://localhost:9663'"
+    echo "   JAVA_HOME=$(brew --prefix openjdk@21) sbt 'run -Dcsrf.origin=http://localhost:9663'"
     echo ""
     echo "2. Start lila (Terminal 2):"
     echo "   cd lila"
-    echo "   JAVA_HOME=/opt/homebrew/opt/openjdk@21 sbt run"
+    echo "   JAVA_HOME=$(brew --prefix openjdk@21) sbt run"
     echo ""
     echo "3. Open http://localhost:9663"
     echo ""

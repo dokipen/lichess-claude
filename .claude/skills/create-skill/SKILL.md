@@ -16,7 +16,7 @@ name: kebab-case-name          # must match directory name
 description: "This skill should be used when..."  # triggers auto-invocation
 version: 1.0.0
 # Pick ONE invocation mode (omit both = Claude + user can invoke):
-user-invocable: false          # Claude-only (background knowledge)
+user-invokable: false          # Claude-only (background knowledge)
 disable-model-invocation: true # User-only (/slash-command with side effects)
 ```
 
@@ -24,7 +24,7 @@ disable-model-invocation: true # User-only (/slash-command with side effects)
 
 | Skill type | Flag |
 |---|---|
-| Background knowledge / conventions | `user-invocable: false` |
+| Background knowledge / conventions | `user-invokable: false` |
 | Side-effect workflow (creates files, runs git, etc.) | `disable-model-invocation: true` |
 | Both Claude and user should invoke | _(omit both)_ |
 
@@ -49,14 +49,13 @@ disable-model-invocation: true # User-only (/slash-command with side effects)
 
 - Remember this is a multi-repo project
 - Include repo-specific commands where relevant (sbt vs pnpm)
-- Reference the correct GitHub org/repos (dokipen/lila, etc.)
+- Reference the user's GitHub fork repos using `$GITHUB_OWNER` (detected via `gh api user --jq '.login'`)
 
 ## After creating
 
-Commit the new skill to the .claude repo:
+Commit the new skill from the repo root:
 ```bash
-cd /Users/bob/src/lichess/.claude
-git add .
+git add .claude/skills/[skill-name]/
 git commit -m "feat: add [skill-name] skill"
 git push
 ```

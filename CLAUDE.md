@@ -8,10 +8,21 @@ Invoke `/lead` to coordinate the phases (it handles worktree setup automatically
 **For simple tasks** (questions, explanations, code review without changes):
 Respond directly without invoking skills.
 
+## GitHub Owner Detection
+
+This is a multi-repo project where you'll frequently need to reference the user's GitHub fork. **Always detect the GitHub owner dynamically** - never hardcode a username.
+
+At the start of any session that needs GitHub operations, run:
+```bash
+GITHUB_OWNER=$(gh api user --jq '.login')
+```
+
+Then use `$GITHUB_OWNER` in all repo references (e.g., `--repo $GITHUB_OWNER/lichess-claude`).
+
 ## Git Workflow
 
 - The main checkout stays on `main`. All work uses git worktrees via the `/new-work` skill.
-- Before pushing to a branch with an open PR, verify with `gh pr view <branch> --repo dokipen/lichess-claude` that it's still open.
+- Before pushing to a branch with an open PR, verify with `gh pr view <branch> --repo $GITHUB_OWNER/lichess-claude` that it's still open.
 
 ### Multi-Repo Coordination
 
@@ -40,9 +51,11 @@ When developing features intended for upstream contribution to lichess-org repos
 
 #### Active Feature Branches
 
+<!-- Add active feature branches here as they are created -->
+<!-- Example row: | Feature Name | `branch-name` | lichess-claude, lila | In Development | -->
+
 | Feature | Branch Name | Repos | Status |
 |---------|-------------|-------|--------|
-| Opening Practice | `opening-practice` | lichess-claude, lila, lila-ws | In Development |
 
 **Note**: All issues for an active feature should include a "Branch Strategy" section specifying the target feature branch.
 
@@ -50,10 +63,10 @@ When developing features intended for upstream contribution to lichess-org repos
 
 - **Always use `gh` CLI** for all GitHub operations (issues, PRs, comments, reviews, API calls, etc.)
 - **Never use WebFetch or URL-fetching tools** for any GitHub URL, including:
-  - `https://github.com/dokipen/lichess-claude/...`
+  - `https://github.com/{user}/lichess-claude/...`
   - `https://github.com/lichess-org/...`
   - `https://api.github.com/repos/...`
-- Examples: `gh issue view`, `gh pr view`, `gh pr list`, `gh api repos/dokipen/lichess-claude/...`
+- Examples: `gh issue view`, `gh pr view`, `gh pr list`, `gh api repos/$GITHUB_OWNER/lichess-claude/...`
 
 ## Agent Teams (Experimental)
 
